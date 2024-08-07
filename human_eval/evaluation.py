@@ -42,6 +42,7 @@ def evaluate_functional_correctness(
     n_workers: int = 4,
     timeout: float = 3.0,
     problem_file: str = HUMAN_EVAL,
+    verbose: bool = False,
 ):
     """
     Evaluates the functional correctness of generated samples, and writes
@@ -58,7 +59,8 @@ def evaluate_functional_correctness(
         n_samples = 0
         results = defaultdict(list)
 
-        print("Reading samples...")
+        if verbose:
+            print("Reading samples...")
         for sample in tqdm.tqdm(stream_jsonl(sample_file)):
             task_id = sample["task_id"]
             completion = sample["completion"]
@@ -68,7 +70,8 @@ def evaluate_functional_correctness(
             completion_id[task_id] += 1
             n_samples += 1
 
-        print("Running test suites...")
+        if verbose:
+            print("Running test suites...")
         for future in tqdm.tqdm(as_completed(futures), total=len(futures)):
             result = future.result()
             results[result["task_id"]].append((result["completion_id"], result))
@@ -97,7 +100,8 @@ def evaluate_functional_correctness(
             yield sample
 
     out_file = sample_file + "_results.jsonl"
-    print(f"Writing results to {out_file}...")
+    if verbose:
+        print(f"Writing results to {out_file}...")
     write_jsonl(out_file, tqdm.tqdm(combine_results(), total=n_samples))
 
     return pass_at_k
